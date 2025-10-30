@@ -37,7 +37,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: 1e6
+    value: '20000000'
   states:
     bus_sink: false
     bus_source: false
@@ -153,31 +153,13 @@ blocks:
     maxoutbuf: '0'
     minoutbuf: '0'
     num_inputs: '2'
-    type: complex
+    type: float
     vlen: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
     coordinate: [1192, 240.0]
-    rotation: 0
-    state: enabled
-- name: blocks_file_sink_0
-  id: blocks_file_sink
-  parameters:
-    affinity: ''
-    alias: ''
-    append: 'False'
-    comment: ''
-    file: ''
-    type: complex
-    unbuffered: 'False'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1208, 680.0]
     rotation: 0
     state: enabled
 - name: blocks_multiply_xx_0
@@ -222,7 +204,7 @@ blocks:
     affinity: ''
     alias: ''
     comment: ''
-    fft_size: '64'
+    fft_size: window_size
     forward: 'True'
     maxoutbuf: '0'
     minoutbuf: '0'
@@ -248,7 +230,7 @@ blocks:
     minoutbuf: '0'
     samp_delay: '0'
     taps: '[1] * window_size'
-    type: ccc
+    type: fff
   states:
     bus_sink: false
     bus_source: false
@@ -273,23 +255,6 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [792, 224.0]
-    rotation: 0
-    state: enabled
-- name: foo_wireshark_connector_0
-  id: foo_wireshark_connector
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    debug: 'False'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    tech: '127'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [976, 640.0]
     rotation: 0
     state: enabled
 - name: ieee802_11_decode_mac_0
@@ -429,10 +394,8 @@ connections:
 - [fir_filter_xxx_0, '0', blocks_divide_xx_0, '1']
 - [fir_filter_xxx_0_0, '0', blocks_complex_to_mag_0, '0']
 - [fir_filter_xxx_0_0, '0', ieee802_11_sync_short_0, '1']
-- [foo_wireshark_connector_0, '0', blocks_file_sink_0, '0']
 - [ieee802_11_decode_mac_0, out, ieee802_11_parse_mac_0, in]
 - [ieee802_11_frame_equalizer_0, '0', ieee802_11_decode_mac_0, '0']
-- [ieee802_11_parse_mac_0, out, foo_wireshark_connector_0, in]
 - [ieee802_11_sync_long_0, '0', blocks_stream_to_vector_0, '0']
 - [ieee802_11_sync_short_0, '0', blocks_delay_0_0, '0']
 - [ieee802_11_sync_short_0, '0', ieee802_11_sync_long_0, '0']
