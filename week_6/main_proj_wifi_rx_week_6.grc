@@ -271,7 +271,7 @@ blocks:
     alias: ''
     append: 'False'
     comment: ''
-    file: /tmp/wifi_week6_livecap.pcap
+    file: /tmp/wifi_pluto_week6.pcap
     type: byte
     unbuffered: 'True'
     vlen: '1'
@@ -279,7 +279,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1320, 864.0]
+    coordinate: [1416, 736.0]
     rotation: 0
     state: enabled
 - name: blocks_file_source_0
@@ -303,7 +303,7 @@ blocks:
     bus_structure: null
     coordinate: [136, 896.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: blocks_file_source_1
   id: blocks_file_source
   parameters:
@@ -381,7 +381,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [664, 152.0]
+    coordinate: [640, 152.0]
     rotation: 0
     state: enabled
 - name: blocks_stream_to_vector_0
@@ -422,7 +422,7 @@ blocks:
     bus_structure: null
     coordinate: [416.0, 768]
     rotation: 90
-    state: enabled
+    state: disabled
 - name: fft_vxx_1
   id: fft_vxx
   parameters:
@@ -479,7 +479,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [760, 240.0]
+    coordinate: [792, 240.0]
     rotation: 0
     state: enabled
 - name: foo_wireshark_connector_0
@@ -496,28 +496,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1112, 840.0]
+    coordinate: [1192, 776.0]
     rotation: 0
     state: enabled
-- name: fosphor_qt_sink_c_0
-  id: fosphor_qt_sink_c
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    freq_center: '0'
-    freq_span: samp_rate
-    gui_hint: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    wintype: window.WIN_BLACKMAN_hARRIS
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [96, 776.0]
-    rotation: 0
-    state: disabled
 - name: ieee802_11_decode_mac_0
   id: ieee802_11_decode_mac
   parameters:
@@ -596,7 +577,7 @@ blocks:
     affinity: ''
     alias: ''
     comment: ''
-    debug: 'True'
+    debug: 'False'
     log: 'True'
     maxoutbuf: '0'
     min_plateau: '2'
@@ -639,136 +620,7 @@ blocks:
     bus_structure: null
     coordinate: [8, 132.0]
     rotation: 0
-    state: disabled
-- name: network_socket_pdu_0
-  id: network_socket_pdu
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    host: 127.0.0.1
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    mtu: '1500'
-    port: '52001'
-    tcp_no_delay: 'False'
-    type: UDP_CLIENT
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1280, 688.0]
-    rotation: 0
-    state: disabled
-- name: pdu_pdu_to_tagged_stream_0
-  id: pdu_pdu_to_tagged_stream
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    tag: packet_len
-    type: complex
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [960, 1104.0]
-    rotation: 0
-    state: disabled
-- name: qtgui_const_sink_x_0_0
-  id: qtgui_const_sink_x
-  parameters:
-    affinity: ''
-    alias: ''
-    alpha1: '1.0'
-    alpha10: '1.0'
-    alpha2: '1.0'
-    alpha3: '1.0'
-    alpha4: '1.0'
-    alpha5: '1.0'
-    alpha6: '1.0'
-    alpha7: '1.0'
-    alpha8: '1.0'
-    alpha9: '1.0'
-    autoscale: 'True'
-    axislabels: 'True'
-    color1: '"blue"'
-    color10: '"dark blue"'
-    color2: '"red"'
-    color3: '"green"'
-    color4: '"black"'
-    color5: '"cyan"'
-    color6: '"magenta"'
-    color7: '"yellow"'
-    color8: '"dark red"'
-    color9: '"dark green"'
-    comment: ''
-    grid: 'True'
-    gui_hint: ''
-    label1: ''
-    label10: ''
-    label2: ''
-    label3: ''
-    label4: ''
-    label5: ''
-    label6: ''
-    label7: ''
-    label8: ''
-    label9: ''
-    legend: 'True'
-    marker1: '0'
-    marker10: '0'
-    marker2: '0'
-    marker3: '0'
-    marker4: '0'
-    marker5: '0'
-    marker6: '0'
-    marker7: '0'
-    marker8: '0'
-    marker9: '0'
-    name: '"Post Equalizer"'
-    nconnections: '1'
-    size: '1024'
-    style1: '0'
-    style10: '0'
-    style2: '0'
-    style3: '0'
-    style4: '0'
-    style5: '0'
-    style6: '0'
-    style7: '0'
-    style8: '0'
-    style9: '0'
-    tr_chan: '0'
-    tr_level: '0.0'
-    tr_mode: qtgui.TRIG_MODE_FREE
-    tr_slope: qtgui.TRIG_SLOPE_POS
-    tr_tag: '""'
-    type: complex
-    update_time: update_period
-    width1: '1'
-    width10: '1'
-    width2: '1'
-    width3: '1'
-    width4: '1'
-    width5: '1'
-    width6: '1'
-    width7: '1'
-    width8: '1'
-    width9: '1'
-    xmax: '30'
-    xmin: '-30'
-    ymax: '30'
-    ymin: '-30'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1208, 1096.0]
-    rotation: 0
-    state: disabled
+    state: enabled
 - name: qtgui_freq_sink_x_1
   id: qtgui_freq_sink_x
   parameters:
@@ -927,14 +779,14 @@ blocks:
     plotwaterfall: 'True'
     rate: '10'
     showports: 'False'
-    showrf: 'False'
+    showrf: 'True'
     type: complex
     wintype: window.WIN_BLACKMAN_hARRIS
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [792, 760.0]
+    coordinate: [840, 848.0]
     rotation: 0
     state: enabled
 - name: qtgui_sink_x_1_0
@@ -1160,102 +1012,22 @@ blocks:
     coordinate: [1160, 336.0]
     rotation: 0
     state: disabled
-- name: qtgui_time_sink_x_1
-  id: qtgui_time_sink_x
+- name: wap2_decryptor_hier_0
+  id: wap2_decryptor_hier
   parameters:
     affinity: ''
     alias: ''
-    alpha1: '1.0'
-    alpha10: '1.0'
-    alpha2: '1.0'
-    alpha3: '1.0'
-    alpha4: '1.0'
-    alpha5: '1.0'
-    alpha6: '1.0'
-    alpha7: '1.0'
-    alpha8: '1.0'
-    alpha9: '1.0'
-    autoscale: 'False'
-    axislabels: 'True'
-    color1: blue
-    color10: dark blue
-    color2: red
-    color3: green
-    color4: black
-    color5: cyan
-    color6: magenta
-    color7: yellow
-    color8: dark red
-    color9: dark green
     comment: ''
-    ctrlpanel: 'False'
-    entags: 'True'
-    grid: 'False'
-    gui_hint: ''
-    label1: Signal 1
-    label10: Signal 10
-    label2: Signal 2
-    label3: Signal 3
-    label4: Signal 4
-    label5: Signal 5
-    label6: Signal 6
-    label7: Signal 7
-    label8: Signal 8
-    label9: Signal 9
-    legend: 'True'
-    marker1: '-1'
-    marker10: '-1'
-    marker2: '-1'
-    marker3: '-1'
-    marker4: '-1'
-    marker5: '-1'
-    marker6: '-1'
-    marker7: '-1'
-    marker8: '-1'
-    marker9: '-1'
-    name: '""'
-    nconnections: '1'
-    size: '1024'
-    srate: samp_rate
-    stemplot: 'False'
-    style1: '1'
-    style10: '1'
-    style2: '1'
-    style3: '1'
-    style4: '1'
-    style5: '1'
-    style6: '1'
-    style7: '1'
-    style8: '1'
-    style9: '1'
-    tr_chan: '0'
-    tr_delay: '0'
-    tr_level: '0.0'
-    tr_mode: qtgui.TRIG_MODE_FREE
-    tr_slope: qtgui.TRIG_SLOPE_POS
-    tr_tag: '""'
-    type: complex
-    update_time: update_period
-    width1: '1'
-    width10: '1'
-    width2: '1'
-    width3: '1'
-    width4: '1'
-    width5: '1'
-    width6: '1'
-    width7: '1'
-    width8: '1'
-    width9: '1'
-    ylabel: Amplitude
-    ymax: '1'
-    ymin: '-1'
-    yunit: '""'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    password: '''password'''
+    ssid: '''ssid'''
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [448, 408.0]
-    rotation: 180
+    coordinate: [992, 640.0]
+    rotation: 0
     state: disabled
 
 connections:
@@ -1286,20 +1058,19 @@ connections:
 - [foo_wireshark_connector_0, '0', blocks_file_sink_0, '0']
 - [ieee802_11_decode_mac_0, out, ieee802_11_parse_mac_0, in]
 - [ieee802_11_frame_equalizer_0, '0', ieee802_11_decode_mac_0, '0']
-- [ieee802_11_frame_equalizer_0, symbols, pdu_pdu_to_tagged_stream_0, pdus]
 - [ieee802_11_parse_mac_0, out, foo_wireshark_connector_0, in]
+- [ieee802_11_parse_mac_0, out, wap2_decryptor_hier_0, in]
 - [ieee802_11_sync_long_0, '0', blocks_stream_to_vector_0, '0']
 - [ieee802_11_sync_long_0, '0', qtgui_freq_sink_x_1, '0']
 - [ieee802_11_sync_long_0, '0', qtgui_sink_x_0_0, '0']
 - [ieee802_11_sync_long_0, '0', qtgui_sink_x_1, '0']
-- [ieee802_11_sync_long_0, '0', qtgui_time_sink_x_1, '0']
 - [ieee802_11_sync_short_0, '0', blocks_delay_0_0, '0']
 - [ieee802_11_sync_short_0, '0', ieee802_11_sync_long_0, '0']
 - [ieee802_11_sync_short_0, '0', qtgui_time_sink_x_0_0, '0']
 - [iio_pluto_source_0, '0', blocks_complex_to_mag_squared_0, '0']
 - [iio_pluto_source_0, '0', blocks_delay_0, '0']
 - [iio_pluto_source_0, '0', blocks_multiply_xx_0, '1']
-- [pdu_pdu_to_tagged_stream_0, '0', qtgui_const_sink_x_0_0, '0']
+- [wap2_decryptor_hier_0, out, foo_wireshark_connector_0, in]
 
 metadata:
   file_format: 1

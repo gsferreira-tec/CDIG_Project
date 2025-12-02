@@ -34,6 +34,11 @@ try:
 except Exception:
     debug_prints = None
 
+try:
+    from week_6 import dynamic_threshold as dynamic_threshold
+except Exception:
+    dynamic_threshold = None
+
 
 
 class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
@@ -73,11 +78,12 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         # Variables
         ##################################################
         self.window_size = window_size = 48
-        self.user_threshold = user_threshold = 0.1
+        self.user_threshold = user_threshold = 0.8
         self.update_period = update_period = 1
         self.samp_rate = samp_rate = 20000000
         self.delay = delay = 240
         self.center_frequency = center_frequency = 5180000000
+        self.auto_threshold = auto_threshold = True
 
         ##################################################
         # Blocks
@@ -108,6 +114,14 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         # Add a QLabel to show the current threshold value
         self._user_threshold_label = Qt.QLabel(f"Current threshold: {self.user_threshold:.2f}")
         self.top_layout.addWidget(self._user_threshold_label)
+        
+        # Auto-threshold toggle checkbox
+        self._auto_threshold_check = Qt.QCheckBox("Enable Auto-Threshold")
+        self._auto_threshold_check.setChecked(self.auto_threshold)
+        self._auto_threshold_check.stateChanged.connect(
+            lambda state: self.set_auto_threshold(state == Qt.Qt.Checked)
+        )
+        self.top_layout.addWidget(self._auto_threshold_check)
         # Create the options list
         self._update_period_options = [0.001, 0.01, 1, 5, 10]
         # Create the labels list
@@ -167,6 +181,26 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(1)
         self.blocks_complex_to_mag_0 = blocks.complex_to_mag(1)
 
+        # Dynamic Threshold Block - monitors autocorrelation and adjusts sync_short threshold
+        if dynamic_threshold is not None:
+            try:
+                self.dynamic_threshold_0 = dynamic_threshold.DynamicThreshold(
+                    sync_short_block=None,  # Will be set after sync_short is created
+                    min_threshold=0.4,
+                    max_threshold=0.95,
+                    initial_threshold=self.user_threshold,
+                    adaptation_rate=0.01,
+                    window_size=10000,
+                    update_interval=0.5,
+                    target_peak_ratio=0.7,
+                    enable_auto=self.auto_threshold
+                )
+            except Exception as e:
+                print(f"[main_proj_wifi_rx] Failed to create dynamic_threshold: {e}")
+                self.dynamic_threshold_0 = None
+        else:
+            self.dynamic_threshold_0 = None
+
 
         ##################################################
         # Connections
@@ -213,6 +247,21 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
             # Safe fallback if block doesn't expose setter
             pass
 
+        # Connect dynamic threshold block to autocorrelation ratio signal
+        if self.dynamic_threshold_0 is not None:
+            try:
+                # Set the sync_short block reference for threshold control
+                self.dynamic_threshold_0.set_sync_short_block(self.ieee802_11_sync_short_0)
+                # Connect: divide output (autocorr ratio) -> dynamic_threshold input
+                # The output can be left unconnected (or connected to a null sink)
+                self.connect((self.blocks_divide_xx_0, 0), (self.dynamic_threshold_0, 0))
+                # Create null sink for output (we don't need the pass-through)
+                self.dynamic_threshold_null_sink = blocks.null_sink(gr.sizeof_float*1)
+                self.connect((self.dynamic_threshold_0, 0), (self.dynamic_threshold_null_sink, 0))
+                print("[main_proj_wifi_rx] Dynamic threshold block connected")
+            except Exception as e:
+                print(f"[main_proj_wifi_rx] Failed to connect dynamic_threshold: {e}")
+
 
     def closeEvent(self, event):
         self.settings = Qt.QSettings("gnuradio/flowgraphs", "main_proj_wifi_rx")
@@ -240,11 +289,35 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
             self.ieee802_11_sync_short_0.set_threshold(self.user_threshold)
         except Exception:
             pass
+        # Also update dynamic threshold block's manual setting
+        if hasattr(self, 'dynamic_threshold_0') and self.dynamic_threshold_0 is not None:
+            try:
+                self.dynamic_threshold_0.set_manual_threshold(self.user_threshold)
+            except Exception:
+                pass
         # update GUI label
         try:
             self._user_threshold_label.setText(f"Current threshold: {self.user_threshold:.2f}")
         except Exception:
             pass
+
+    def get_auto_threshold(self):
+        return self.auto_threshold
+
+    def set_auto_threshold(self, auto_threshold):
+        self.auto_threshold = auto_threshold
+        # Update dynamic threshold block
+        if hasattr(self, 'dynamic_threshold_0') and self.dynamic_threshold_0 is not None:
+            try:
+                self.dynamic_threshold_0.set_enable_auto(self.auto_threshold)
+            except Exception:
+                pass
+        # Update checkbox state if called programmatically
+        try:
+            self._auto_threshold_check.setChecked(self.auto_threshold)
+        except Exception:
+            pass
+        print(f"[main_proj_wifi_rx] Auto-threshold: {'ON' if self.auto_threshold else 'OFF'}")
 
     def get_update_period(self):
         return self.update_period
