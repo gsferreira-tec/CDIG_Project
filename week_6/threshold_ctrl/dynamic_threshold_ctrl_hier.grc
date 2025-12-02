@@ -1,0 +1,155 @@
+options:
+  parameters:
+    author: Guilherme Ferreira
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: hb
+    hier_block_src_path: '.:'
+    id: threshold_control
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: Threshold Control
+    window_size: (1000,1000)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '32000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [200, 12]
+    rotation: 0
+    state: enabled
+- name: blocks_null_sink_0
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 200.0]
+    rotation: 0
+    state: enabled
+- name: blocks_null_source_0
+  id: blocks_null_source
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_source: '[[0,],]'
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_outputs: '1'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [256, 312.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_0
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\nimport sys\nimport importlib\n\n# --- CONFIGURATION\
+      \ ---\n# Path to the folder containing dynamic_threshold.py\npath_to_module\
+      \ = '/home/guilherme/github/CDIG_Project/week_6/'\n# ---------------------\n\
+      \n# Add to Python path\nif path_to_module not in sys.path:\n    sys.path.insert(0,\
+      \ path_to_module)\n\n# Import the dynamic threshold module\ntry:\n    import\
+      \ dynamic_threshold\n    # Reload for development\n    importlib.reload(dynamic_threshold)\n\
+      except ImportError as e:\n    print(f\"[Error] Could not import dynamic_threshold\
+      \ from {path_to_module}: {e}\")\n    raise e\n\n\nclass blk(dynamic_threshold.DynamicThreshold):\n\
+      \    \"\"\"\n    Wrapper for Dynamic Threshold Controller.\n    \n    Monitors\
+      \ autocorrelation ratio and dynamically adjusts\n    the sync_short threshold\
+      \ for optimal frame detection.\n    \"\"\"\n\n    def __init__(self, sync_short_block=None,\n\
+      \                 min_threshold=0.4, max_threshold=0.95,\n                 initial_threshold=0.8,\n\
+      \                 adaptation_rate=0.01,\n                 window_size=10000,\n\
+      \                 update_interval=0.5,\n                 target_peak_ratio=0.7,\n\
+      \                 enable_auto=True):\n        \"\"\"\n        Args:\n      \
+      \      sync_short_block: Reference to ieee802_11.sync_short block\n        \
+      \    min_threshold: Minimum allowed threshold\n            max_threshold: Maximum\
+      \ allowed threshold\n            initial_threshold: Starting threshold value\n\
+      \            adaptation_rate: How fast to adjust (0.001-0.1)\n            window_size:\
+      \ Samples for statistics window\n            update_interval: Seconds between\
+      \ threshold updates\n            target_peak_ratio: Target detection rate\n\
+      \            enable_auto: Enable automatic adjustment\n        \"\"\"\n    \
+      \    dynamic_threshold.DynamicThreshold.__init__(\n            self,\n     \
+      \       sync_short_block=sync_short_block,\n            min_threshold=min_threshold,\n\
+      \            max_threshold=max_threshold,\n            initial_threshold=initial_threshold,\n\
+      \            adaptation_rate=adaptation_rate,\n            window_size=window_size,\n\
+      \            update_interval=update_interval,\n            target_peak_ratio=target_peak_ratio,\n\
+      \            enable_auto=enable_auto\n        )\n\n"
+    adaptation_rate: ''
+    affinity: ''
+    alias: ''
+    comment: ''
+    enable_auto: ''
+    initial_threshold: ''
+    max_threshold: ''
+    maxoutbuf: '0'
+    min_threshold: ''
+    minoutbuf: '0'
+    sync_short_block: ''
+    target_peak_ratio: ''
+    update_interval: ''
+    window_size: ''
+  states:
+    _io_cache: ('Dynamic Threshold', 'blk', [('sync_short_block', 'None'), ('min_threshold',
+      '0.4'), ('max_threshold', '0.95'), ('initial_threshold', '0.8'), ('adaptation_rate',
+      '0.01'), ('window_size', '10000'), ('update_interval', '0.5'), ('target_peak_ratio',
+      '0.7'), ('enable_auto', 'True')], [('0', 'float', 1)], [('0', 'float', 1), ('threshold',
+      'message', 1)], '\nWrapper for Dynamic Threshold Controller.\n\nMonitors autocorrelation
+      ratio and dynamically adjusts\nthe sync_short threshold for optimal frame detection.\n',
+      ['adaptation_rate', 'enable_auto', 'max_threshold', 'min_threshold', 'sync_short_block',
+      'target_peak_ratio', 'update_interval', 'window_size'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [528, 224.0]
+    rotation: 0
+    state: enabled
+
+connections:
+- [blocks_null_source_0, '0', epy_block_0, '0']
+- [epy_block_0, '0', blocks_null_sink_0, '0']
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.12.0
