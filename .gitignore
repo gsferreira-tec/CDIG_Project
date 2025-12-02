@@ -1,3 +1,7 @@
 *.ipynb
 .github
-.md
+*.md
+
+intel_wifi_card.png
+tools/
+__pycache__/
