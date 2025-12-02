@@ -123,8 +123,8 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1068.0, 8]
-    rotation: 270
+    coordinate: [1060.0, 32]
+    rotation: 90
     state: enabled
 - name: user_threshold
   id: variable_qtgui_range
@@ -325,7 +325,7 @@ blocks:
     bus_structure: null
     coordinate: [136, 992.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: blocks_file_source_2
   id: blocks_file_source
   parameters:
@@ -363,7 +363,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1336.0, 328]
+    coordinate: [1360.0, 336]
     rotation: 270
     state: disabled
 - name: blocks_multiply_xx_0
@@ -422,7 +422,7 @@ blocks:
     bus_structure: null
     coordinate: [416.0, 768]
     rotation: 90
-    state: enabled
+    state: disabled
 - name: fft_vxx_1
   id: fft_vxx
   parameters:
@@ -499,25 +499,6 @@ blocks:
     coordinate: [1112, 840.0]
     rotation: 0
     state: enabled
-- name: fosphor_qt_sink_c_0
-  id: fosphor_qt_sink_c
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    freq_center: '0'
-    freq_span: samp_rate
-    gui_hint: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    wintype: window.WIN_BLACKMAN_hARRIS
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [96, 776.0]
-    rotation: 0
-    state: disabled
 - name: ieee802_11_decode_mac_0
   id: ieee802_11_decode_mac
   parameters:
@@ -639,7 +620,7 @@ blocks:
     bus_structure: null
     coordinate: [8, 132.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: pdu_pdu_to_tagged_stream_0
   id: pdu_pdu_to_tagged_stream
   parameters:

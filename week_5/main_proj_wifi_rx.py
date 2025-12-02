@@ -13,7 +13,6 @@ from gnuradio import qtgui
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject, pyqtSlot
 from gnuradio import blocks
-import pmt
 from gnuradio import fft
 from gnuradio.fft import window
 from gnuradio import filter
@@ -25,6 +24,7 @@ from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
+from gnuradio import iio
 import foo
 import ieee802_11
 import sip
@@ -135,6 +135,16 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.qtgui_sink_x_1.enable_rf_freq(False)
 
         self.top_layout.addWidget(self._qtgui_sink_x_1_win)
+        self.iio_pluto_source_0 = iio.fmcomms2_source_fc32('' if '' else iio.get_pluto_uri(), [True, True], 32768)
+        self.iio_pluto_source_0.set_len_tag_key('packet_len')
+        self.iio_pluto_source_0.set_frequency(center_frequency)
+        self.iio_pluto_source_0.set_samplerate(samp_rate)
+        self.iio_pluto_source_0.set_gain_mode(0, 'manual')
+        self.iio_pluto_source_0.set_gain(0, 20)
+        self.iio_pluto_source_0.set_quadrature(True)
+        self.iio_pluto_source_0.set_rfdc(True)
+        self.iio_pluto_source_0.set_bbdc(True)
+        self.iio_pluto_source_0.set_filter_params('Auto', '', 0, 0)
         self.ieee802_11_sync_short_0 = ieee802_11.sync_short(0.8, 2, True, False)
         self.ieee802_11_sync_long_0 = ieee802_11.sync_long(delay, False, False)
         self.ieee802_11_parse_mac_0 = ieee802_11.parse_mac(True, True)
@@ -146,11 +156,8 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.fir_filter_xxx_0 = filter.fir_filter_fff(1, [1] * window_size)
         self.fir_filter_xxx_0.declare_sample_delay(0)
         self.fft_vxx_1 = fft.fft_vcc(64, True, window.rectangular(64), True, 1)
-        self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_stream_to_vector_0 = blocks.stream_to_vector(gr.sizeof_gr_complex*1, 64)
         self.blocks_multiply_xx_0 = blocks.multiply_vcc(1)
-        self.blocks_file_source_1 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/guilherme/Desktop/MEEC/DigitalCommunications/MainProject/Wifi_Project_Baseband_recordings/Sample2_20MHz_Channel6.bin', True, 0, 0)
-        self.blocks_file_source_1.set_begin_tag(pmt.PMT_NIL)
         self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/tmp/wifi_pluto_capture.pcap', False)
         self.blocks_file_sink_0.set_unbuffered(True)
         self.blocks_divide_xx_0 = blocks.divide_ff(1)
@@ -173,12 +180,8 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_delay_0, 0), (self.ieee802_11_sync_short_0, 0))
         self.connect((self.blocks_delay_0_0, 0), (self.ieee802_11_sync_long_0, 1))
         self.connect((self.blocks_divide_xx_0, 0), (self.ieee802_11_sync_short_0, 2))
-        self.connect((self.blocks_file_source_1, 0), (self.blocks_throttle2_0, 0))
         self.connect((self.blocks_multiply_xx_0, 0), (self.fir_filter_xxx_0_0, 0))
         self.connect((self.blocks_stream_to_vector_0, 0), (self.fft_vxx_1, 0))
-        self.connect((self.blocks_throttle2_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
-        self.connect((self.blocks_throttle2_0, 0), (self.blocks_delay_0, 0))
-        self.connect((self.blocks_throttle2_0, 0), (self.blocks_multiply_xx_0, 1))
         self.connect((self.fft_vxx_1, 0), (self.ieee802_11_frame_equalizer_0, 0))
         self.connect((self.fir_filter_xxx_0, 0), (self.blocks_divide_xx_0, 1))
         self.connect((self.fir_filter_xxx_0_0, 0), (self.blocks_complex_to_mag_0, 0))
@@ -189,6 +192,9 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.connect((self.ieee802_11_sync_long_0, 0), (self.qtgui_sink_x_1, 0))
         self.connect((self.ieee802_11_sync_short_0, 0), (self.blocks_delay_0_0, 0))
         self.connect((self.ieee802_11_sync_short_0, 0), (self.ieee802_11_sync_long_0, 0))
+        self.connect((self.iio_pluto_source_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
+        self.connect((self.iio_pluto_source_0, 0), (self.blocks_delay_0, 0))
+        self.connect((self.iio_pluto_source_0, 0), (self.blocks_multiply_xx_0, 1))
 
 
     def closeEvent(self, event):
@@ -225,7 +231,7 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.blocks_throttle2_0.set_sample_rate(self.samp_rate)
+        self.iio_pluto_source_0.set_samplerate(self.samp_rate)
         self.qtgui_sink_x_1.set_frequency_range(self.center_frequency, self.samp_rate)
 
     def get_delay(self):
@@ -242,6 +248,7 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.center_frequency = center_frequency
         self._center_frequency_callback(self.center_frequency)
         self.ieee802_11_frame_equalizer_0.set_frequency(self.center_frequency)
+        self.iio_pluto_source_0.set_frequency(self.center_frequency)
         self.qtgui_sink_x_1.set_frequency_range(self.center_frequency, self.samp_rate)
 
 
