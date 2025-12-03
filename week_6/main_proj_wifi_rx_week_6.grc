@@ -11,7 +11,7 @@ options:
     gen_linking: dynamic
     generate_options: qt_gui
     hier_block_src_path: '.:'
-    id: main_proj_wifi_rx
+    id: main_proj_wifi_rx_week_6
     max_nouts: '0'
     output_language: python
     placement: (0,0)
@@ -63,6 +63,36 @@ blocks:
     coordinate: [1360, 4.0]
     rotation: 0
     state: enabled
+- name: chan_est
+  id: variable_qtgui_chooser
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: ''
+    label0: ''
+    label1: ''
+    label2: ''
+    label3: ''
+    label4: ''
+    labels: '["LS", "LMS", "Linear Comb", "STA"]'
+    num_opts: '0'
+    option0: '0'
+    option1: '1'
+    option2: '2'
+    option3: '3'
+    option4: '4'
+    options: '[0, 1, 2, 3]'
+    orient: Qt.QHBoxLayout
+    type: int
+    value: '0'
+    widget: radio_buttons
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 384.0]
+    rotation: 0
+    state: enabled
 - name: delay
   id: variable_qtgui_range
   parameters:
@@ -81,7 +111,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1432, 272.0]
+    coordinate: [8, 512.0]
     rotation: 0
     state: enabled
 - name: samp_rate
@@ -135,18 +165,18 @@ blocks:
     min_len: '200'
     orient: QtCore.Qt.Horizontal
     rangeType: float
-    start: '0.1'
+    start: '0.56'
     step: '0.01'
-    stop: '0.9'
-    value: '0.1'
+    stop: '1.12'
+    value: '0.56'
     widget: counter_slider
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1432, 416.0]
+    coordinate: [8, 632.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: window_size
   id: variable
   parameters:
@@ -354,7 +384,7 @@ blocks:
     affinity: ''
     alias: ''
     comment: ''
-    const: 0.8/user_threshold
+    const: 0.56/user_threshold
     maxoutbuf: '0'
     minoutbuf: '0'
     type: float
@@ -363,9 +393,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1368.0, 320]
+    coordinate: [1456.0, 328]
     rotation: 270
-    state: disabled
+    state: enabled
 - name: blocks_multiply_xx_0
   id: blocks_multiply_xx
   parameters:
@@ -460,7 +490,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [616, 336.0]
+    coordinate: [648, 320.0]
     rotation: 0
     state: enabled
 - name: fir_filter_xxx_0_0
@@ -479,7 +509,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [792, 240.0]
+    coordinate: [792, 232.0]
     rotation: 0
     state: enabled
 - name: foo_wireshark_connector_0
@@ -496,7 +526,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1192, 776.0]
+    coordinate: [1136, 744.0]
     rotation: 0
     state: enabled
 - name: ieee802_11_decode_mac_0
@@ -506,7 +536,7 @@ blocks:
     alias: ''
     comment: ''
     debug: 'False'
-    log: 'True'
+    log: 'False'
     maxoutbuf: '0'
     minoutbuf: '0'
   states:
@@ -520,7 +550,7 @@ blocks:
   id: ieee802_11_frame_equalizer
   parameters:
     affinity: ''
-    algo: ieee802_11.LS
+    algo: ieee802_11.Equalizer(chan_est)
     alias: ''
     bw: 20e6
     comment: ''
@@ -542,8 +572,8 @@ blocks:
     affinity: ''
     alias: ''
     comment: ''
-    debug: 'True'
-    log: 'True'
+    debug: 'False'
+    log: 'False'
     maxoutbuf: '0'
     minoutbuf: '0'
   states:
@@ -578,11 +608,11 @@ blocks:
     alias: ''
     comment: ''
     debug: 'False'
-    log: 'True'
+    log: 'False'
     maxoutbuf: '0'
     min_plateau: '2'
     minoutbuf: '0'
-    threshold: '0.8'
+    threshold: '0.56'
   states:
     bus_sink: false
     bus_source: false
@@ -786,7 +816,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [840, 848.0]
+    coordinate: [856, 784.0]
     rotation: 0
     state: enabled
 - name: qtgui_sink_x_1_0
@@ -1039,7 +1069,6 @@ connections:
 - [blocks_delay_0, '0', qtgui_sink_x_0, '0']
 - [blocks_delay_0_0, '0', ieee802_11_sync_long_0, '1']
 - [blocks_divide_xx_0, '0', blocks_multiply_const_vxx_0, '0']
-- [blocks_divide_xx_0, '0', ieee802_11_sync_short_0, '2']
 - [blocks_file_source_0, '0', blocks_throttle2_0, '0']
 - [blocks_file_source_1, '0', blocks_throttle2_0, '0']
 - [blocks_file_source_2, '0', blocks_throttle2_0, '0']

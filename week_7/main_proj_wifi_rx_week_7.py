@@ -13,7 +13,6 @@ from gnuradio import qtgui
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject, pyqtSlot
 from gnuradio import blocks
-import pmt
 from gnuradio import fft
 from gnuradio.fft import window
 from gnuradio import filter
@@ -25,23 +24,15 @@ from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
+from gnuradio import iio
 import foo
 import ieee802_11
 import sip
 import threading
-try:
-    from week_6 import debug_prints as debug_prints
-except Exception:
-    debug_prints = None
-
-try:
-    from week_6 import dynamic_threshold as dynamic_threshold
-except Exception:
-    dynamic_threshold = None
 
 
 
-class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
+class main_proj_wifi_rx_week_7(gr.top_block, Qt.QWidget):
 
     def __init__(self):
         gr.top_block.__init__(self, "Wifi RX SDR", catch_exceptions=True)
@@ -64,7 +55,7 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.top_grid_layout = Qt.QGridLayout()
         self.top_layout.addLayout(self.top_grid_layout)
 
-        self.settings = Qt.QSettings("gnuradio/flowgraphs", "main_proj_wifi_rx")
+        self.settings = Qt.QSettings("gnuradio/flowgraphs", "main_proj_wifi_rx_week_7")
 
         try:
             geometry = self.settings.value("geometry")
@@ -78,20 +69,48 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         # Variables
         ##################################################
         self.window_size = window_size = 48
-        self.user_threshold = user_threshold = 0.8
+        self.user_threshold = user_threshold = 0.56
         self.update_period = update_period = 1
         self.samp_rate = samp_rate = 20000000
         self.delay = delay = 240
+        self.chan_est = chan_est = 0
         self.center_frequency = center_frequency = 5180000000
-        self.auto_threshold = auto_threshold = True
 
         ##################################################
         # Blocks
         ##################################################
 
+        self._user_threshold_range = qtgui.Range(0.56, 1.12, 0.01, 0.56, 200)
+        self._user_threshold_win = qtgui.RangeWidget(self._user_threshold_range, self.set_user_threshold, "'user_threshold'", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._user_threshold_win)
         self._delay_range = qtgui.Range(240, 720, 20, 240, 200)
         self._delay_win = qtgui.RangeWidget(self._delay_range, self.set_delay, "'delay'", "counter_slider", int, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._delay_win)
+        # Create the options list
+        self._chan_est_options = [0, 1, 2, 3]
+        # Create the labels list
+        self._chan_est_labels = ['LS', 'LMS', 'Linear Comb', 'STA']
+        # Create the combo box
+        # Create the radio buttons
+        self._chan_est_group_box = Qt.QGroupBox("'chan_est'" + ": ")
+        self._chan_est_box = Qt.QHBoxLayout()
+        class variable_chooser_button_group(Qt.QButtonGroup):
+            def __init__(self, parent=None):
+                Qt.QButtonGroup.__init__(self, parent)
+            @pyqtSlot(int)
+            def updateButtonChecked(self, button_id):
+                self.button(button_id).setChecked(True)
+        self._chan_est_button_group = variable_chooser_button_group()
+        self._chan_est_group_box.setLayout(self._chan_est_box)
+        for i, _label in enumerate(self._chan_est_labels):
+            radio_button = Qt.QRadioButton(_label)
+            self._chan_est_box.addWidget(radio_button)
+            self._chan_est_button_group.addButton(radio_button, i)
+        self._chan_est_callback = lambda i: Qt.QMetaObject.invokeMethod(self._chan_est_button_group, "updateButtonChecked", Qt.Q_ARG("int", self._chan_est_options.index(i)))
+        self._chan_est_callback(self.chan_est)
+        self._chan_est_button_group.buttonClicked[int].connect(
+            lambda i: self.set_chan_est(self._chan_est_options[i]))
+        self.top_layout.addWidget(self._chan_est_group_box)
         # Create the options list
         self._center_frequency_options = [5220000000, 5180000000, 2420000000, 2380000000]
         # Create the labels list
@@ -108,20 +127,6 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
             lambda i: self.set_center_frequency(self._center_frequency_options[i]))
         # Create the radio buttons
         self.top_layout.addWidget(self._center_frequency_tool_bar)
-        self._user_threshold_range = qtgui.Range(0.1, 0.9, 0.01, 0.1, 200)
-        self._user_threshold_win = qtgui.RangeWidget(self._user_threshold_range, self.set_user_threshold, "'user_threshold'", "counter_slider", float, QtCore.Qt.Horizontal)
-        self.top_layout.addWidget(self._user_threshold_win)
-        # Add a QLabel to show the current threshold value
-        self._user_threshold_label = Qt.QLabel(f"Current threshold: {self.user_threshold:.2f}")
-        self.top_layout.addWidget(self._user_threshold_label)
-        
-        # Auto-threshold toggle checkbox
-        self._auto_threshold_check = Qt.QCheckBox("Enable Auto-Threshold")
-        self._auto_threshold_check.setChecked(self.auto_threshold)
-        self._auto_threshold_check.stateChanged.connect(
-            lambda state: self.set_auto_threshold(state == Qt.Qt.Checked)
-        )
-        self.top_layout.addWidget(self._auto_threshold_check)
         # Create the options list
         self._update_period_options = [0.001, 0.01, 1, 5, 10]
         # Create the labels list
@@ -153,26 +158,34 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.qtgui_sink_x_1.set_update_time(1.0/10)
         self._qtgui_sink_x_1_win = sip.wrapinstance(self.qtgui_sink_x_1.qwidget(), Qt.QWidget)
 
-        self.qtgui_sink_x_1.enable_rf_freq(False)
+        self.qtgui_sink_x_1.enable_rf_freq(True)
 
         self.top_layout.addWidget(self._qtgui_sink_x_1_win)
-        self.ieee802_11_sync_short_0 = ieee802_11.sync_short(0.8, 2, True, False)
+        self.iio_pluto_source_0 = iio.fmcomms2_source_fc32('' if '' else iio.get_pluto_uri(), [True, True], 32768)
+        self.iio_pluto_source_0.set_len_tag_key('packet_len')
+        self.iio_pluto_source_0.set_frequency(center_frequency)
+        self.iio_pluto_source_0.set_samplerate(samp_rate)
+        self.iio_pluto_source_0.set_gain_mode(0, 'manual')
+        self.iio_pluto_source_0.set_gain(0, 20)
+        self.iio_pluto_source_0.set_quadrature(True)
+        self.iio_pluto_source_0.set_rfdc(True)
+        self.iio_pluto_source_0.set_bbdc(True)
+        self.iio_pluto_source_0.set_filter_params('Auto', '', 0, 0)
+        self.ieee802_11_sync_short_0 = ieee802_11.sync_short(0.56, 2, True, False)
         self.ieee802_11_sync_long_0 = ieee802_11.sync_long(delay, False, False)
         self.ieee802_11_parse_mac_0 = ieee802_11.parse_mac(True, True)
-        self.ieee802_11_frame_equalizer_0 = ieee802_11.frame_equalizer(ieee802_11.LS, center_frequency, 20e6, False, False)
+        self.ieee802_11_frame_equalizer_0 = ieee802_11.frame_equalizer(ieee802_11.Equalizer(chan_est), center_frequency, 20e6, False, False)
         self.ieee802_11_decode_mac_0 = ieee802_11.decode_mac(True, False)
         self.foo_wireshark_connector_0 = foo.wireshark_connector(127, True)
         self.fir_filter_xxx_0_0 = filter.fir_filter_ccf(1, [1]*window_size)
         self.fir_filter_xxx_0_0.declare_sample_delay(0)
-        self.fir_filter_xxx_0 = filter.fir_filter_fff(1, [1] * window_size)
+        self.fir_filter_xxx_0 = filter.fir_filter_fff(1, [1] * 64)
         self.fir_filter_xxx_0.declare_sample_delay(0)
         self.fft_vxx_1 = fft.fft_vcc(64, True, window.rectangular(64), True, 1)
-        self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_stream_to_vector_0 = blocks.stream_to_vector(gr.sizeof_gr_complex*1, 64)
         self.blocks_multiply_xx_0 = blocks.multiply_vcc(1)
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/guilherme/Desktop/MEEC/DigitalCommunications/MainProject/Wifi_Project_Baseband_recordings/Sample1_20MHz_Channel36.bin', True, 0, 0)
-        self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/tmp/wifi_pluto_capture.pcap', False)
+        self.blocks_multiply_const_vxx_0 = blocks.multiply_const_ff((0.56/user_threshold))
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/tmp/wifi_pluto_week7.pcap', False)
         self.blocks_file_sink_0.set_unbuffered(True)
         self.blocks_divide_xx_0 = blocks.divide_ff(1)
         self.blocks_delay_0_0 = blocks.delay(gr.sizeof_gr_complex*1, delay)
@@ -180,26 +193,6 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.blocks_conjugate_cc_0 = blocks.conjugate_cc()
         self.blocks_complex_to_mag_squared_0 = blocks.complex_to_mag_squared(1)
         self.blocks_complex_to_mag_0 = blocks.complex_to_mag(1)
-
-        # Dynamic Threshold Block - monitors autocorrelation and adjusts sync_short threshold
-        if dynamic_threshold is not None:
-            try:
-                self.dynamic_threshold_0 = dynamic_threshold.DynamicThreshold(
-                    sync_short_block=None,  # Will be set after sync_short is created
-                    min_threshold=0.4,
-                    max_threshold=0.95,
-                    initial_threshold=self.user_threshold,
-                    adaptation_rate=0.01,
-                    window_size=10000,
-                    update_interval=0.5,
-                    target_peak_ratio=0.7,
-                    enable_auto=self.auto_threshold
-                )
-            except Exception as e:
-                print(f"[main_proj_wifi_rx] Failed to create dynamic_threshold: {e}")
-                self.dynamic_threshold_0 = None
-        else:
-            self.dynamic_threshold_0 = None
 
 
         ##################################################
@@ -213,13 +206,10 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_delay_0, 0), (self.blocks_conjugate_cc_0, 0))
         self.connect((self.blocks_delay_0, 0), (self.ieee802_11_sync_short_0, 0))
         self.connect((self.blocks_delay_0_0, 0), (self.ieee802_11_sync_long_0, 1))
-        self.connect((self.blocks_divide_xx_0, 0), (self.ieee802_11_sync_short_0, 2))
-        self.connect((self.blocks_file_source_0, 0), (self.blocks_throttle2_0, 0))
+        self.connect((self.blocks_divide_xx_0, 0), (self.blocks_multiply_const_vxx_0, 0))
+        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.ieee802_11_sync_short_0, 2))
         self.connect((self.blocks_multiply_xx_0, 0), (self.fir_filter_xxx_0_0, 0))
         self.connect((self.blocks_stream_to_vector_0, 0), (self.fft_vxx_1, 0))
-        self.connect((self.blocks_throttle2_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
-        self.connect((self.blocks_throttle2_0, 0), (self.blocks_delay_0, 0))
-        self.connect((self.blocks_throttle2_0, 0), (self.blocks_multiply_xx_0, 1))
         self.connect((self.fft_vxx_1, 0), (self.ieee802_11_frame_equalizer_0, 0))
         self.connect((self.fir_filter_xxx_0, 0), (self.blocks_divide_xx_0, 1))
         self.connect((self.fir_filter_xxx_0_0, 0), (self.blocks_complex_to_mag_0, 0))
@@ -230,41 +220,13 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.connect((self.ieee802_11_sync_long_0, 0), (self.qtgui_sink_x_1, 0))
         self.connect((self.ieee802_11_sync_short_0, 0), (self.blocks_delay_0_0, 0))
         self.connect((self.ieee802_11_sync_short_0, 0), (self.ieee802_11_sync_long_0, 0))
-
-        # Attach debug_prints PDU listener (prints SSIDs found by parse_mac)
-        if debug_prints is not None:
-            try:
-                # instantiate debug block and connect message port
-                self.debug_prints_0 = debug_prints.DebugPrints(unique=True, print_all=False)
-                self.msg_connect((self.ieee802_11_parse_mac_0, 'out'), (self.debug_prints_0, 'in'))
-            except Exception as e:
-                print(f"[main_proj_wifi_rx] Failed to attach debug_prints: {e}")
-
-        # Ensure the sync_short initial threshold uses the GUI variable
-        try:
-            self.ieee802_11_sync_short_0.set_threshold(self.user_threshold)
-        except Exception:
-            # Safe fallback if block doesn't expose setter
-            pass
-
-        # Connect dynamic threshold block to autocorrelation ratio signal
-        if self.dynamic_threshold_0 is not None:
-            try:
-                # Set the sync_short block reference for threshold control
-                self.dynamic_threshold_0.set_sync_short_block(self.ieee802_11_sync_short_0)
-                # Connect: divide output (autocorr ratio) -> dynamic_threshold input
-                # The output can be left unconnected (or connected to a null sink)
-                self.connect((self.blocks_divide_xx_0, 0), (self.dynamic_threshold_0, 0))
-                # Create null sink for output (we don't need the pass-through)
-                self.dynamic_threshold_null_sink = blocks.null_sink(gr.sizeof_float*1)
-                self.connect((self.dynamic_threshold_0, 0), (self.dynamic_threshold_null_sink, 0))
-                print("[main_proj_wifi_rx] Dynamic threshold block connected")
-            except Exception as e:
-                print(f"[main_proj_wifi_rx] Failed to connect dynamic_threshold: {e}")
+        self.connect((self.iio_pluto_source_0, 0), (self.blocks_complex_to_mag_squared_0, 0))
+        self.connect((self.iio_pluto_source_0, 0), (self.blocks_delay_0, 0))
+        self.connect((self.iio_pluto_source_0, 0), (self.blocks_multiply_xx_0, 1))
 
 
     def closeEvent(self, event):
-        self.settings = Qt.QSettings("gnuradio/flowgraphs", "main_proj_wifi_rx")
+        self.settings = Qt.QSettings("gnuradio/flowgraphs", "main_proj_wifi_rx_week_7")
         self.settings.setValue("geometry", self.saveGeometry())
         self.stop()
         self.wait()
@@ -276,7 +238,6 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
 
     def set_window_size(self, window_size):
         self.window_size = window_size
-        self.fir_filter_xxx_0.set_taps([1] * self.window_size)
         self.fir_filter_xxx_0_0.set_taps([1]*self.window_size)
 
     def get_user_threshold(self):
@@ -284,40 +245,7 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
 
     def set_user_threshold(self, user_threshold):
         self.user_threshold = user_threshold
-        # update C++ block threshold if supported
-        try:
-            self.ieee802_11_sync_short_0.set_threshold(self.user_threshold)
-        except Exception:
-            pass
-        # Also update dynamic threshold block's manual setting
-        if hasattr(self, 'dynamic_threshold_0') and self.dynamic_threshold_0 is not None:
-            try:
-                self.dynamic_threshold_0.set_manual_threshold(self.user_threshold)
-            except Exception:
-                pass
-        # update GUI label
-        try:
-            self._user_threshold_label.setText(f"Current threshold: {self.user_threshold:.2f}")
-        except Exception:
-            pass
-
-    def get_auto_threshold(self):
-        return self.auto_threshold
-
-    def set_auto_threshold(self, auto_threshold):
-        self.auto_threshold = auto_threshold
-        # Update dynamic threshold block
-        if hasattr(self, 'dynamic_threshold_0') and self.dynamic_threshold_0 is not None:
-            try:
-                self.dynamic_threshold_0.set_enable_auto(self.auto_threshold)
-            except Exception:
-                pass
-        # Update checkbox state if called programmatically
-        try:
-            self._auto_threshold_check.setChecked(self.auto_threshold)
-        except Exception:
-            pass
-        print(f"[main_proj_wifi_rx] Auto-threshold: {'ON' if self.auto_threshold else 'OFF'}")
+        self.blocks_multiply_const_vxx_0.set_k((0.56/self.user_threshold))
 
     def get_update_period(self):
         return self.update_period
@@ -331,7 +259,7 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.blocks_throttle2_0.set_sample_rate(self.samp_rate)
+        self.iio_pluto_source_0.set_samplerate(self.samp_rate)
         self.qtgui_sink_x_1.set_frequency_range(self.center_frequency, self.samp_rate)
 
     def get_delay(self):
@@ -341,6 +269,14 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.delay = delay
         self.blocks_delay_0_0.set_dly(int(self.delay))
 
+    def get_chan_est(self):
+        return self.chan_est
+
+    def set_chan_est(self, chan_est):
+        self.chan_est = chan_est
+        self._chan_est_callback(self.chan_est)
+        self.ieee802_11_frame_equalizer_0.set_algorithm(ieee802_11.Equalizer(self.chan_est))
+
     def get_center_frequency(self):
         return self.center_frequency
 
@@ -348,12 +284,13 @@ class main_proj_wifi_rx(gr.top_block, Qt.QWidget):
         self.center_frequency = center_frequency
         self._center_frequency_callback(self.center_frequency)
         self.ieee802_11_frame_equalizer_0.set_frequency(self.center_frequency)
+        self.iio_pluto_source_0.set_frequency(self.center_frequency)
         self.qtgui_sink_x_1.set_frequency_range(self.center_frequency, self.samp_rate)
 
 
 
 
-def main(top_block_cls=main_proj_wifi_rx, options=None):
+def main(top_block_cls=main_proj_wifi_rx_week_7, options=None):
 
     qapp = Qt.QApplication(sys.argv)
 
